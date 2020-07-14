@@ -37,13 +37,13 @@ where
     use hex::FromHex;
     use serde::de::Error;
 
-    let string = String::deserialize(deserializer)?;
+    let string = <&str>::deserialize(deserializer)?;
 
     if string.len() == 0 {
         return Ok(Digest([0; 16]));
     }
 
-    <[u8; 16]>::from_hex(&string)
+    <[u8; 16]>::from_hex(string)
         .map_err(|err| Error::custom(err.to_string()))
         .map(Digest)
 }
