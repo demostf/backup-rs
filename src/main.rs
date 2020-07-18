@@ -4,7 +4,6 @@ mod store;
 use crate::backup::Backup;
 use crate::store::Store;
 use main_error::MainError;
-use md5::Digest;
 use std::cmp::max;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -17,7 +16,7 @@ pub enum Error {
     #[error("Request failed: {0}")]
     Request(#[from] std::io::Error),
     #[error("MD5 digest mismatch for downloaded demo, expected {expected:?}, received {got:?}")]
-    DigestMismatch { expected: Digest, got: Digest },
+    DigestMismatch { expected: [u8; 16], got: [u8; 16] },
 }
 
 fn main() -> Result<(), MainError> {

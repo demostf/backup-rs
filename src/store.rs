@@ -1,4 +1,4 @@
-use md5::{Context, Digest};
+use md5::Context;
 use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Read, Write};
@@ -15,7 +15,7 @@ impl Store {
         }
     }
 
-    pub fn store(&self, name: &str, data: &mut impl Read) -> std::io::Result<Digest> {
+    pub fn store(&self, name: &str, data: &mut impl Read) -> std::io::Result<[u8; 16]> {
         let path = self.generate_path(name);
         fs::create_dir_all(path.parent().unwrap())?;
 
@@ -27,7 +27,7 @@ impl Store {
         // copy the file and compute the digest was we go
         loop {
             let len = match data.read(&mut buf) {
-                Ok(0) => return Ok(context.compute()),
+                Ok(0) => return Ok(context.compute().0),
                 Ok(len) => len,
                 Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
                 Err(e) => return Err(e),

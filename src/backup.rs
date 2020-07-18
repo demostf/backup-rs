@@ -1,7 +1,6 @@
 use crate::api::{list_demos, ListOrder, ListParams};
 use crate::store::Store;
 use crate::Error;
-use md5::Digest;
 
 pub struct Backup {
     store: Store,
@@ -12,12 +11,12 @@ impl Backup {
         Backup { store }
     }
 
-    fn backup_demo(&self, name: &str, url: &str, hash: Digest) -> Result<(), Error> {
+    fn backup_demo(&self, name: &str, url: &str, hash: [u8; 16]) -> Result<(), Error> {
         let resp = ureq::get(url).call();
 
         let digest = self.store.store(name, &mut resp.into_reader())?;
 
-        if digest == hash || digest == Digest([0; 16]) {
+        if digest == hash || digest == [0; 16] {
             Ok(())
         } else {
             let _ = self.store.remove(name);

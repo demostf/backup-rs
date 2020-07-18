@@ -1,6 +1,5 @@
 use crate::Error;
 use chrono::{DateTime, Utc};
-use md5::Digest;
 use serde::{Deserialize, Deserializer};
 use smol_str::SmolStr;
 use std::fmt;
@@ -24,13 +23,13 @@ pub struct Demo {
     pub player_count: u8,
     pub uploader: u32,
     #[serde(deserialize_with = "hex_to_digest")]
-    pub hash: Digest,
+    pub hash: [u8; 16],
     pub backend: SmolStr,
     pub path: String,
 }
 
-/// Deserializes a lowercase hex string to a `Vec<u8>`.
-pub fn hex_to_digest<'de, D>(deserializer: D) -> Result<Digest, D::Error>
+/// Deserializes a lowercase hex string to a `[u8; 16]`.
+pub fn hex_to_digest<'de, D>(deserializer: D) -> Result<[u8; 16], D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -40,12 +39,10 @@ where
     let string = <&str>::deserialize(deserializer)?;
 
     if string.len() == 0 {
-        return Ok(Digest([0; 16]));
+        return Ok([0; 16]);
     }
 
-    <[u8; 16]>::from_hex(string)
-        .map_err(|err| Error::custom(err.to_string()))
-        .map(Digest)
+    <[u8; 16]>::from_hex(string).map_err(|err| Error::custom(err.to_string()))
 }
 
 #[derive(Debug)]
