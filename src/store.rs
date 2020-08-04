@@ -1,7 +1,8 @@
 use md5::Context;
 use std::fs;
-use std::fs::File;
+use std::fs::{File, Permissions};
 use std::io::{ErrorKind, Read, Write};
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
 pub struct Store {
@@ -37,6 +38,7 @@ impl Store {
             context.consume(data);
 
             file.write_all(data)?;
+            file.set_permissions(Permissions::from_mode(0o644))?;
         }
     }
 
