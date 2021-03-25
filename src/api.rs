@@ -1,7 +1,6 @@
 use crate::Error;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer};
-use smol_str::SmolStr;
 use std::fmt;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -10,21 +9,21 @@ pub struct Demo {
     pub id: u32,
     pub url: String,
     pub name: String,
-    pub server: SmolStr,
+    pub server: String,
     pub duration: u16,
-    pub nick: SmolStr,
-    pub map: SmolStr,
+    pub nick: String,
+    pub map: String,
     #[serde(with = "chrono::serde::ts_seconds")]
     pub time: DateTime<Utc>,
-    pub red: SmolStr,
-    pub blue: SmolStr,
+    pub red: String,
+    pub blue: String,
     pub red_score: u8,
     pub blue_score: u8,
     pub player_count: u8,
     pub uploader: u32,
     #[serde(deserialize_with = "hex_to_digest")]
     pub hash: [u8; 16],
-    pub backend: SmolStr,
+    pub backend: String,
     pub path: String,
 }
 
