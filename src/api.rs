@@ -1,6 +1,7 @@
 use crate::Error;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer};
+use std::borrow::Cow;
 use std::fmt;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -35,13 +36,13 @@ where
     use hex::FromHex;
     use serde::de::Error;
 
-    let string = <&str>::deserialize(deserializer)?;
+    let string = <Cow<str>>::deserialize(deserializer)?;
 
     if string.len() == 0 {
         return Ok([0; 16]);
     }
 
-    <[u8; 16]>::from_hex(string).map_err(|err| Error::custom(err.to_string()))
+    <[u8; 16]>::from_hex(string.as_ref()).map_err(|err| Error::custom(err.to_string()))
 }
 
 #[derive(Debug)]
