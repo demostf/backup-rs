@@ -12,7 +12,7 @@ impl Backup {
     }
 
     fn backup_demo(&self, name: &str, url: &str, hash: [u8; 16]) -> Result<(), Error> {
-        let resp = ureq::get(url).call();
+        let resp = ureq::get(url).call()?;
 
         let digest = self.store.store(name, &mut resp.into_reader())?;
 
@@ -31,7 +31,7 @@ impl Backup {
         let demos = list_demos(ListParams::default().with_order(ListOrder::Ascending), page)?;
 
         for demo in demos.iter() {
-            if demo.url != "" {
+            if !demo.url.is_empty() {
                 let name = demo.url.rsplit('/').next().unwrap();
                 println!("{} {}", demo.id, name);
                 if !self.store.exists(name) {

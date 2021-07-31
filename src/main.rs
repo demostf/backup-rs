@@ -15,8 +15,16 @@ mod api;
 pub enum Error {
     #[error("Request failed: {0}")]
     Request(#[from] std::io::Error),
+    #[error("Request failed: {0}")]
+    UReq(Box<ureq::Error>),
     #[error("MD5 digest mismatch for downloaded demo, expected {expected:?}, received {got:?}")]
     DigestMismatch { expected: [u8; 16], got: [u8; 16] },
+}
+
+impl From<ureq::Error> for Error {
+    fn from(e: ureq::Error) -> Self {
+        Error::UReq(Box::new(e))
+    }
 }
 
 fn main() -> Result<(), MainError> {

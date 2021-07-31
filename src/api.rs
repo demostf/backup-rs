@@ -73,6 +73,7 @@ pub struct ListParams {
 }
 
 impl ListParams {
+    #[allow(dead_code)]
     pub fn with_backend(self, backend: impl ToString) -> Self {
         ListParams {
             backend: Some(backend.to_string()),
@@ -86,15 +87,15 @@ impl ListParams {
 }
 
 pub fn list_demos(params: ListParams, page: u32) -> Result<Vec<Demo>, Error> {
-    let mut req = ureq::get("https://api.demos.tf/demos");
-    req.query("page", &format!("{}", page))
+    let mut req = ureq::get("https://api.demos.tf/demos")
+        .query("page", &format!("{}", page))
         .query("order", &format!("{}", params.order));
 
     if let Some(backend) = params.backend.as_ref() {
-        req.query("backend", backend);
+        req = req.query("backend", backend);
     }
 
-    let resp = req.call();
+    let resp = req.call()?;
 
-    Ok(resp.into_json_deserialize()?)
+    Ok(resp.into_json()?)
 }
