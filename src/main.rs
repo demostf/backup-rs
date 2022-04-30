@@ -8,26 +8,22 @@ use std::cmp::max;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use thiserror::Error;
-
-mod api;
+use tracing::info;
 
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Request failed: {0}")]
     Request(#[from] std::io::Error),
-    #[error("Request failed: {0}")]
-    UReq(Box<ureq::Error>),
+    #[error(transparent)]
+    Api(#[from] demostf_client::Error),
     #[error("MD5 digest mismatch for downloaded demo, expected {expected:?}, received {got:?}")]
     DigestMismatch { expected: [u8; 16], got: [u8; 16] },
 }
 
-impl From<ureq::Error> for Error {
-    fn from(e: ureq::Error) -> Self {
-        Error::UReq(Box::new(e))
-    }
-}
+#[tokio::main]
+async fn main() -> Result<(), MainError> {
+    tracing_subscriber::fmt::init();
 
-fn main() -> Result<(), MainError> {
     let mut args: HashMap<_, _> = dotenv::vars().collect();
     let store = Store::new(args.get("STORAGE_ROOT").expect("no STORAGE_ROOT set"));
     let state_path = PathBuf::from(args.remove("STATE_FILE").expect("no STATE_FILE set"));
@@ -44,8 +40,9 @@ fn main() -> Result<(), MainError> {
     } else {
         1u32
     };
+    info!(last_page, "starting backup");
 
-    let current_page = backup.backup_from(last_page)?;
+    let current_page = backup.backup_from(last_page).await?;
 
     std::fs::write(&state_path, format!("{}", current_page))?;
 

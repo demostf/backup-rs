@@ -1,9 +1,13 @@
+use crate::Error;
+use bytes::Bytes;
+use futures_util::{Stream, StreamExt};
 use md5::Context;
 use std::fs;
 use std::fs::{File, Permissions};
-use std::io::{ErrorKind, Read, Write};
+use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
+use tokio::pin;
 
 pub struct Store {
     basedir: PathBuf,
@@ -16,30 +20,28 @@ impl Store {
         }
     }
 
-    pub fn store(&self, name: &str, data: &mut impl Read) -> std::io::Result<[u8; 16]> {
+    pub async fn store(
+        &self,
+        name: &str,
+        data: impl Stream<Item = Result<Bytes, demostf_client::Error>>,
+    ) -> Result<[u8; 16], Error> {
         let path = self.generate_path(name);
         fs::create_dir_all(path.parent().unwrap())?;
 
         let mut file = File::create(&path)?;
 
         let mut context = Context::new();
-        let mut buf = [0u8; 8 * 1024];
 
+        pin!(data);
         // copy the file and compute the digest was we go
-        loop {
-            let len = match data.read(&mut buf) {
-                Ok(0) => return Ok(context.compute().0),
-                Ok(len) => len,
-                Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
-                Err(e) => return Err(e),
-            };
-
-            let data = &buf[..len];
-            context.consume(data);
-
-            file.write_all(data)?;
-            file.set_permissions(Permissions::from_mode(0o644))?;
+        while let Some(chunk) = data.next().await {
+            let chunk = chunk?;
+            context.consume(&chunk);
+            file.write_all(&chunk)?;
         }
+        file.set_permissions(Permissions::from_mode(0o644))?;
+
+        Ok(context.compute().0)
     }
 
     pub fn exists(&self, name: &str) -> bool {

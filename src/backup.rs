@@ -1,41 +1,53 @@
-use crate::api::{list_demos, ListOrder, ListParams};
 use crate::store::Store;
 use crate::Error;
+use demostf_client::{ApiClient, Demo, ListOrder, ListParams};
+use tracing::{info, instrument};
 
 pub struct Backup {
+    client: ApiClient,
     store: Store,
 }
 
 impl Backup {
     pub fn new(store: Store) -> Self {
-        Backup { store }
+        Backup {
+            store,
+            client: ApiClient::new(),
+        }
     }
 
-    fn backup_demo(&self, name: &str, url: &str, hash: [u8; 16]) -> Result<(), Error> {
-        let resp = ureq::get(url).call()?;
+    #[instrument(skip_all, fields(demo.id = demo.id, demo.name = name))]
+    async fn backup_demo(&self, name: &str, demo: &Demo) -> Result<(), Error> {
+        info!("backing up");
+        let chunks = demo.download(&self.client).await?;
 
-        let digest = self.store.store(name, &mut resp.into_reader())?;
+        let digest = self.store.store(name, chunks).await?;
 
-        if digest == hash || digest == [0; 16] {
+        if digest == demo.hash || digest == [0; 16] {
             Ok(())
         } else {
             let _ = self.store.remove(name);
             Err(Error::DigestMismatch {
-                expected: hash,
+                expected: demo.hash,
                 got: digest,
             })
         }
     }
 
-    fn backup_page(&self, page: u32) -> Result<usize, Error> {
-        let demos = list_demos(ListParams::default().with_order(ListOrder::Ascending), page)?;
+    #[instrument(skip(self))]
+    async fn backup_page(&self, page: u32) -> Result<usize, Error> {
+        let demos = self
+            .client
+            .list(ListParams::default().with_order(ListOrder::Ascending), page)
+            .await?;
 
         for demo in demos.iter() {
             if !demo.url.is_empty() {
                 let name = demo.url.rsplit('/').next().unwrap();
-                println!("{} {}", demo.id, name);
                 if !self.store.exists(name) {
-                    self.backup_demo(name, &demo.url, demo.hash)?;
+                    self.backup_demo(name, demo).await?;
+                } else {
+                    info!(demo = demo.id, name, "already backed up");
                 }
             }
         }
@@ -43,8 +55,8 @@ impl Backup {
         Ok(demos.len())
     }
 
-    pub fn backup_from(&self, mut page: u32) -> Result<u32, Error> {
-        while self.backup_page(page)? > 0 {
+    pub async fn backup_from(&self, mut page: u32) -> Result<u32, Error> {
+        while self.backup_page(page).await? > 0 {
             page += 1;
         }
 

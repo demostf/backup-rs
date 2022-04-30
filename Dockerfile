@@ -8,5 +8,5 @@ RUN cargo build --release
 FROM alpine:latest
 
 COPY --from=build /home/rust/src/target/x86_64-unknown-linux-musl/release/backup /
-
+ENV RUST_LOG=info
 CMD ["/backup"]
