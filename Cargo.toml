@@ -5,11 +5,11 @@ authors = ["Robin Appelman <robin@icewind.nl>"]
 edition = "2018"
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-ureq = { version = "2", features = ["json"] }
-thiserror = "1"
+serde = { version = "1.0.136", features = ["derive"] }
+ureq = { version = "2.4.0", features = ["json"] }
+thiserror = "1.0.30"
 chrono = { version = "0.4", features = ["serde"] }
-md5 = "0.7"
-hex = "0.4"
-dotenv = "0.15"
-main_error = "0.1"
+md5 = "0.7.0"
+hex = "0.4.3"
+dotenv = "0.15.0"
+main_error = "0.1.2"
