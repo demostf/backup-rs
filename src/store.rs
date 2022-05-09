@@ -1,6 +1,8 @@
 use crate::Error;
+use md5::Context;
 use std::fs;
 use std::fs::{File, Permissions};
+use std::io::Read;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
@@ -31,6 +33,28 @@ impl Store {
 
     pub fn remove(&self, name: &str) -> std::io::Result<()> {
         fs::remove_file(self.generate_path(name))
+    }
+
+    pub fn hash(&self, name: &str) -> Result<[u8; 16], Error> {
+        let path = self.generate_path(name);
+        let mut file = File::open(path)?;
+
+        let mut hash = Context::new();
+
+        let mut buff = vec![0; 1024 * 1024];
+
+        loop {
+            let read = file.read(&mut buff)?;
+
+            if read == 0 {
+                break;
+            }
+
+            let data = &buff[0..read];
+            hash.consume(&data);
+        }
+
+        Ok(hash.compute().0)
     }
 
     fn generate_path(&self, name: &str) -> PathBuf {

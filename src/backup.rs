@@ -20,10 +20,21 @@ impl Backup {
     async fn backup_demo(&self, name: &str, demo: &Demo) -> Result<(), Error> {
         info!("backing up");
 
-        let mut file = self.store.create(name).await?;
+        {
+            let file = self.store.create(name).await?;
+            demo.save(&self.client, file).await?;
+        }
 
-        demo.save(&self.client, &mut file).await?;
-        Ok(())
+        let digest = self.store.hash(name)?;
+        if digest == demo.hash || digest == [0; 16] {
+            Ok(())
+        } else {
+            let _ = self.store.remove(name);
+            Err(Error::DigestMismatch {
+                expected: demo.hash,
+                got: digest,
+            })
+        }
     }
 
     #[instrument(skip(self))]
