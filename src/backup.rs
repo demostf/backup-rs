@@ -22,7 +22,10 @@ impl Backup {
 
         {
             let file = self.store.create(name).await?;
-            demo.save(&self.client, file).await?;
+            if let Err(e) = demo.save(&self.client, file).await {
+                let _ = self.store.remove(name);
+                return Err(e.into());
+            }
         }
 
         let digest = self.store.hash(name)?;
