@@ -30,14 +30,10 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 name = "backup"
 version = "0.1.0"
 dependencies = [
- "bytes",
  "demostf-client",
  "dotenv",
  "futures-util",
- "hex",
  "main_error",
- "md5",
- "serde",
  "thiserror",
  "tokio",
  "tracing",
@@ -76,18 +72,21 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "demostf-client"
-version = "0.3.1"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ba6215021299e2f440f91c6c32bb5dd8f19ae7e94c9c692124f52daa9ec5b57"
+checksum = "0ec005bc832bfc50b85c2f70c11342d6e0f5ed125464a7e70a1109fef32465b6"
 dependencies = [
  "bytes",
  "futures-util",
  "hex",
+ "md5",
  "reqwest",
  "serde",
  "steamid-ng",
  "thiserror",
  "time",
+ "tinyvec",
+ "tracing",
 ]
 
 [[package]]

@@ -19,19 +19,11 @@ impl Backup {
     #[instrument(skip_all, fields(demo.id = demo.id, demo.name = name))]
     async fn backup_demo(&self, name: &str, demo: &Demo) -> Result<(), Error> {
         info!("backing up");
-        let chunks = demo.download(&self.client).await?;
 
-        let digest = self.store.store(name, chunks).await?;
+        let mut file = self.store.create(name).await?;
 
-        if digest == demo.hash || digest == [0; 16] {
-            Ok(())
-        } else {
-            let _ = self.store.remove(name);
-            Err(Error::DigestMismatch {
-                expected: demo.hash,
-                got: digest,
-            })
-        }
+        demo.save(&self.client, &mut file).await?;
+        Ok(())
     }
 
     #[instrument(skip(self))]

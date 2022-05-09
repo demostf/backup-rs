@@ -16,8 +16,6 @@ pub enum Error {
     Request(#[from] std::io::Error),
     #[error(transparent)]
     Api(#[from] demostf_client::Error),
-    #[error("MD5 digest mismatch for downloaded demo, expected {expected:?}, received {got:?}")]
-    DigestMismatch { expected: [u8; 16], got: [u8; 16] },
 }
 
 #[tokio::main]
