@@ -18,6 +18,8 @@ pub enum Error {
     Api(#[from] demostf_client::Error),
     #[error("MD5 digest mismatch for downloaded demo, expected {expected:?}, received {got:?}")]
     DigestMismatch { expected: [u8; 16], got: [u8; 16] },
+    #[error("Backup timed out")]
+    Timeout,
 }
 
 #[tokio::main]

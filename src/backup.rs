@@ -1,7 +1,9 @@
 use crate::store::Store;
 use crate::Error;
 use demostf_client::{ApiClient, Demo, ListOrder, ListParams};
-use tracing::{info, instrument};
+use std::time::Duration;
+use tokio::time::timeout;
+use tracing::{error, info, instrument};
 
 pub struct Backup {
     client: ApiClient,
@@ -22,10 +24,23 @@ impl Backup {
 
         {
             let file = self.store.create(name).await?;
-            if let Err(e) = demo.save(&self.client, file).await {
-                let _ = self.store.remove(name);
-                return Err(e.into());
-            }
+            match timeout(Duration::from_secs(5 * 60), async {
+                if let Err(e) = demo.save(&self.client, file).await {
+                    let _ = self.store.remove(name);
+                    Err::<(), Error>(e.into())
+                } else {
+                    Ok::<_, Error>(())
+                }
+            })
+            .await
+            {
+                Err(_timeout) => {
+                    error!("timeout while downloading demo");
+                    let _ = self.store.remove(name);
+                    Err(Error::Timeout)
+                }
+                Ok(res) => res,
+            }?;
         }
 
         let digest = self.store.hash(name)?;
