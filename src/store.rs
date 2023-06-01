@@ -51,7 +51,7 @@ impl Store {
             }
 
             let data = &buff[0..read];
-            hash.consume(&data);
+            hash.consume(data);
         }
 
         Ok(hash.compute().0)

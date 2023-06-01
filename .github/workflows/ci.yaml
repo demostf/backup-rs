@@ -77,6 +77,6 @@ jobs:
           authToken: '${{ secrets.ATTIC_TOKEN }}'
       - run: nix build .#dockerImage
       - name: Push image
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: |
           skopeo copy --dest-creds="${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" "docker-archive:$(nix build .#dockerImage --print-out-paths)" "docker://demostf/backup"
