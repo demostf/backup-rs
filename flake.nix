@@ -27,7 +27,7 @@
           defaultApp = apps.demobackup;
 
           # `nix develop`
-          devShell = pkgs.mkShell {
+          devShells.default = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [ rustc cargo ];
           };
         }
