@@ -1,7 +1,9 @@
 {
   inputs = {
+    nixpkgs.url = "nixpkgs/release-23.05";
     flake-utils.url = "github:numtide/flake-utils";
     naersk.url = "github:nix-community/naersk";
+    naersk.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, nixpkgs, flake-utils, naersk }:
