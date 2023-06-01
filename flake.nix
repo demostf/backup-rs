@@ -11,12 +11,23 @@
       system: let
         pkgs = nixpkgs.legacyPackages."${system}";
         naersk-lib = naersk.lib."${system}";
+        lib = pkgs.lib;
       in
         rec {
           # `nix build`
-          packages.demobackup = naersk-lib.buildPackage {
-            pname = "demobackup";
-            root = ./.;
+          packages = rec {
+            demobackup = naersk-lib.buildPackage {
+              pname = "demobackup";
+              root = lib.sources.sourceByRegex (lib.cleanSource ./.) ["Cargo.*" "src" "src/.*"];
+            };
+            dockerImage = pkgs.dockerTools.buildImage {
+              name = "demostf/backup";
+              tag = "latest";
+              copyToRoot = [demobackup];
+              config = {
+                Cmd = [ "${demobackup}/bin/backup"];
+              };
+            };
           };
           defaultPackage = packages.demobackup;
 
