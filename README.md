@@ -1,3 +1,5 @@
+# Moved to https://codeberg.org/demostf/plugin
+
 # backup-rs
 
 Backup program for demos.tf demos.
